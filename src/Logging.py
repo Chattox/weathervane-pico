@@ -1,4 +1,5 @@
 from os import stat, remove, rename
+from utils.datetime_string import datetime_string
 
 
 class Logging:
@@ -7,14 +8,16 @@ class Logging:
     def __init__(self):
         # values for keeping log file from taking up too much space, in bytes
         self.__truncate_at = 11 * 1024
-        self.__tuncate_to = 8 * 1024
+        self.__truncate_to = 8 * 1024
+        # name of log file
+        self.__log_file = "log.txt"
 
-    def log_size(self, file):
+    def __log_size(self, file):
         """
         Get size of the log file
 
         Args:
-          file (obj): File object of the log file
+          file (str): Filename of log file
 
         Returns:
           int: Size of log file
@@ -25,15 +28,15 @@ class Logging:
         except OSError:
             return None
 
-    def truncate(self, file, target_size):
+    def __truncate(self, file, target_size):
         """
         Truncate log file to desired size
 
         Args:
-          file (obj): Log file object
+          file (str): Filename of log file
           target_size (int): Desired size of log file in bytes
         """
-        cur_size = self.log_size(file)
+        cur_size = self.__log_size(file)
 
         # figure out how many bytes to remove from log file
         discard_size = cur_size - target_size
@@ -64,3 +67,23 @@ class Logging:
         # delete old file and replace with new
         remove(file)
         rename(file + ".tmp", file)
+
+    def log(self, level, text):
+        """
+        Save logging data to log file
+
+        Args:
+          level (str): logging level such as debug, error, etc
+          text (str): content of log
+        """
+        datetime = datetime_string()
+        # append datetime string to log entry
+        log_entry = "{0} [{1}] {2}".format(datetime, level, text)
+        print(log_entry)
+        # write to file with newline
+        with open(self.__log_file, "a") as logfile:
+            logfile.write(log_entry + "\n")
+
+        # if log file is getting too big, truncate
+        if self.__truncate_at and self.__log_size(self.__log_file):
+            self.__truncate(self.__log_file, self.__truncate_to)
