@@ -1,7 +1,7 @@
 from machine import PWM, Pin, Timer
 from math import sin, pi
 from time import ticks_ms
-from constants import ACTIVITY_LED_PIN
+from utils.constants import ACTIVITY_LED_PIN
 
 
 class ActivityLED:

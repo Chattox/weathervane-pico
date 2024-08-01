@@ -1,7 +1,7 @@
 from machine import RTC
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
-from constants import I2C_SDA_PIN, I2C_SCL_PIN
+from utils.constants import I2C_SDA_PIN, I2C_SCL_PIN
 from ActivityLED import ActivityLED
 
 
