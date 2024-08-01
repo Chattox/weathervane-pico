@@ -68,7 +68,7 @@ class Logging:
         remove(file)
         rename(file + ".tmp", file)
 
-    def log(self, level, text):
+    def __log(self, level, text):
         """
         Save logging data to log file
 
@@ -87,3 +87,48 @@ class Logging:
         # if log file is getting too big, truncate
         if self.__truncate_at and self.__log_size(self.__log_file):
             self.__truncate(self.__log_file, self.__truncate_to)
+
+    def debug(self, *items):
+        """
+        Logs at debug level
+
+        Args:
+          *items: logging info which will be converted to strings and saved
+        """
+        self.__log("debug", " ".join(map(str, items)))
+
+    def info(self, *items):
+        """
+        Logs at info level
+
+        Args:
+          *items: logging info which will be converted to strings and saved
+        """
+        self.__log("info", " ".join(map(str, items)))
+
+    def warn(self, *items):
+        """
+        Logs at warn level
+
+        Args:
+          *items: logging info which will be converted to strings and saved
+        """
+        self.__log("warn", " ".join(map(str, items)))
+
+    def error(self, *items):
+        """
+        Logs at error level
+
+        Args:
+          *items: logging info which will be converted to strings and saved
+        """
+        self.__log("error", " ".join(map(str, items)))
+
+    def exception(self, *items):
+        """
+        Logs at exception level
+
+        Args:
+          *items: logging info which will be converted to strings and saved
+        """
+        self.__log("exception", " ".join(map(str, items)))
