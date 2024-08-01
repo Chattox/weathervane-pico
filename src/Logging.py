@@ -78,7 +78,7 @@ class Logging:
         """
         datetime = datetime_string()
         # append datetime string to log entry
-        log_entry = "{0} [{1}] {2}".format(datetime, level, text)
+        log_entry = "{0} {1:>12} {2}".format(datetime, "[" + level + "]:", text)
         print(log_entry)
         # write to file with newline
         with open(self.__log_file, "a") as logfile:
