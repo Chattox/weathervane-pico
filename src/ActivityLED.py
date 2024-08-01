@@ -42,7 +42,7 @@ class ActivityLED:
 
     def pulse(self, speed_hz=1):
         """
-        Pulse the activity LED
+        Pulses the activity LED
 
         Args:
             speed_hz (`int`): Speed of the LED pulse in Hz
@@ -55,7 +55,7 @@ class ActivityLED:
 
     def stop(self):
         """
-        Turn off the activity LED and disable any pulsing currently running
+        Turns off the activity LED and stops any pulse animations currently running
         """
         self.__timer.deinit()
         self.__pwm.duty_u16(0)
