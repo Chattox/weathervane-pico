@@ -63,6 +63,9 @@ class Weathervane:
         reason = self.get_wake_reason()
         self.logger.info(" - Wake reason: ", WAKE_REASON_NAMES[reason])
 
+        # Pulse activity LED to show board is active
+        self.activity_led.pulse()
+
     def get_wake_reason(self):
         """
         Get reason for waking
@@ -130,7 +133,7 @@ class Weathervane:
             sleep_ms(50)
             # Reset on button press
             if self.button.value():
+                self.logger.info("- Button pressed, resetting board")
                 break
 
-        self.logger.info("- Button pressed, resetting board")
         reset()
