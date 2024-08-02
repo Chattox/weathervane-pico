@@ -1,3 +1,7 @@
+# VSCode gubbins
 .vscode
-typings
 .micropico
+typings
+
+# Env file
+**/config.py
