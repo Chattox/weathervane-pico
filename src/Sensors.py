@@ -5,7 +5,15 @@ from pimoroni import Analog
 from ucollections import OrderedDict
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
-from utils.constants import WIND_DIR_PIN, WIND_SPEED_PIN, WIND_RADIUS_CM, WIND_FACTOR
+from utils.constants import (
+    RAIN_PIN,
+    WIND_DIR_PIN,
+    WIND_SPEED_PIN,
+    WIND_RADIUS_CM,
+    WIND_FACTOR,
+)
+from utils.datetime_string import datetime_string
+from utils.file_exists import file_exists
 
 
 class Sensors:
@@ -16,11 +24,15 @@ class Sensors:
       i2c (PimoroniI2C): I2C controller for passing to sensor controllers
     """
 
-    def __init__(self, i2c):
+    def __init__(self, logger, i2c, act_led):
+        self.__logger = logger
         self.__bme280 = BreakoutBME280(i2c, 0x77)
         self.__ltr559 = BreakoutLTR559(i2c)
         self.__wind_speed_pin = Pin(WIND_SPEED_PIN, Pin.IN, Pin.PULL_UP)
         self.__wind_dir_pin = Analog(WIND_DIR_PIN)
+        self.__rain_pin = Pin(RAIN_PIN, Pin.IN, Pin.PULL_DOWN)
+        self.__prev_rain_trigger = False
+        self.__activity_led = act_led
 
     def __get_wind_speed(self, sample_time_ms=1000):
         """
@@ -112,6 +124,48 @@ class Sensors:
             last_index = closest_index
 
         return closest_index * 45
+
+    def check_rain_sensor(self, wakeup=False):
+        """
+        Check rain sensor and if rain detected, log rain event.
+
+        Used either as part of the monitoring state the board goes into when
+        in sleep mode but on USB power or when the board is battery powered and
+        woken up from sleep mode by the rain sensor trigger
+
+        Args:
+          wakeup (bool): If true, skip getting pin value and go straight to logging rain event
+        """
+        if not wakeup:
+            rain_val = self.__rain_pin.value()
+
+        # Make sure the rain sensor has triggered and hasn't already been
+        # triggered this wake to prevent duplicate entries
+        if wakeup or (rain_val and not self.__prev_rain_trigger):
+            self.__activity_led.set_brightness(100)
+            sleep_ms(50)
+            self.__activity_led.set_brightness(0)
+
+            # Read in current rain entries
+            rain_entries = []
+            if file_exists("rain.txt"):
+                with open("rain.txt", "r") as rainfile:
+                    rain_entries = rainfile.read().split("\n")
+
+            # Add the new entry
+            dt_str = datetime_string()
+            self.__logger.info(f"Adding new rain trigger at {dt_str}")
+            rain_entries.append(dt_str)
+
+            # Limit number of entries to 190; each entry is ~21 bytes including newline
+            # so this keeps total filesize to just under one filesystem block (4096 bytes)
+            rain_entries = rain_entries[-190:]
+
+            # Write the new rain log
+            with open("rain.txt", "w") as rainfile:
+                rainfile.write("\n".join(rain_entries))
+
+        self.__prev_rain_trigger = True if wakeup else rain_val
 
     def get_sensor_readings(self):
         """

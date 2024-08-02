@@ -1,4 +1,4 @@
-from machine import Pin, RTC, reset
+from machine import Pin, RTC, idle, reset
 from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
@@ -50,7 +50,7 @@ class Weathervane:
         # sync pico's RTC to chip
         RTC().datetime((t[0], t[1], t[2], t[6], t[3], t[4], t[5], 0))
         self.activity_led = ActivityLED()
-        self.sensors = Sensors(self.__i2c)
+        self.sensors = Sensors(self.logger, self.__i2c, self.activity_led)
 
     def startup(self):
         """
@@ -67,6 +67,11 @@ class Weathervane:
 
         reason = self.__get_wake_reason()
         self.logger.info(" - Wake reason: ", WAKE_REASON_NAMES[reason])
+
+        # If woken by rain trigger, log and go back to sleep
+        if reason == WAKE_RAIN_TRIGGER:
+            self.sensors.check_rain_sensor(True)
+            self.sleep()
 
         # Pulse activity LED to show board is active
         self.activity_led.pulse()
@@ -135,7 +140,8 @@ class Weathervane:
             "- On USB power so can't shut down. Waiting for alarm or other trigger instead"
         )
         while not self.rtc.read_alarm_flag():
-            sleep_ms(50)
+            self.sensors.check_rain_sensor()
+            sleep_ms(1)
             # Reset on button press
             if self.button.value():
                 self.logger.info("- Button pressed, resetting board")
