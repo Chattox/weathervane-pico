@@ -19,6 +19,7 @@ from utils.constants import (
 )
 from Logging import Logging
 from ActivityLED import ActivityLED
+from Sensors import Sensors
 
 
 class Weathervane:
@@ -48,6 +49,7 @@ class Weathervane:
         # sync pico's RTC to chip
         RTC().datetime((t[0], t[1], t[2], t[6], t[3], t[4], t[5], 0))
         self.activity_led = ActivityLED()
+        self.sensors = Sensors(self.__i2c)
 
     def startup(self):
         """
