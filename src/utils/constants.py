@@ -25,3 +25,12 @@ WAKE_USB_POWERED = 6
 WARN_LED_OFF = 0
 WARN_LED_ON = 1
 WARN_LED_BLINK = 2
+
+WAKE_REASON_NAMES = {
+    None: "Unknown",
+    WAKE_BUTTON_PRESS: "Button",
+    WAKE_RTC_ALARM: "RTC Alarm",
+    WAKE_EXT_TRIGGER: "External trigger",
+    WAKE_RAIN_TRIGGER: "Rain trigger",
+    WAKE_USB_POWERED: "USB powered",
+}
