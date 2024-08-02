@@ -26,6 +26,7 @@ WARN_LED_OFF = 0
 WARN_LED_ON = 1
 WARN_LED_BLINK = 2
 
+# wake reasons as strings for logging
 WAKE_REASON_NAMES = {
     None: "Unknown",
     WAKE_BUTTON_PRESS: "Button",
@@ -34,3 +35,10 @@ WAKE_REASON_NAMES = {
     WAKE_RAIN_TRIGGER: "Rain trigger",
     WAKE_USB_POWERED: "USB powered",
 }
+
+# other helpful values
+# distance from the centre of the anemometer to the
+# centre of one of the cups in cm
+WIND_RADIUS_CM = 7.0
+# scaling factor for wind speed in m/s
+WIND_FACTOR = 0.0218
