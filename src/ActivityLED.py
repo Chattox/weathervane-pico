@@ -5,7 +5,9 @@ from utils.constants import ACTIVITY_LED_PIN
 
 
 class ActivityLED:
-    """Controls the activity LED on the enviro board"""
+    """
+    Controls the activity LED on the enviro board
+    """
 
     def __init__(self):
         self.__pwm = PWM(Pin(ACTIVITY_LED_PIN))
@@ -19,7 +21,7 @@ class ActivityLED:
         Set the brightness of the activity LED
 
         Args:
-            level (`int`): Target brightness level between 0 - 100
+            level (int): Target brightness level between 0 - 100
         """
         # clamp to within range
         brightness = max(0, min(100, level))
@@ -32,7 +34,7 @@ class ActivityLED:
         Updates the activity LED brightness based on a sinusoid seeded by the current time
 
         Args:
-            t (`obj`): The Timer object passed as part of the Timer callback
+            t (obj): The Timer object passed as part of the Timer callback
         """
         brightness = (
             sin(ticks_ms() * pi * 2 / (1000 / self.__pulse_speed_hz)) * 40
@@ -45,7 +47,7 @@ class ActivityLED:
         Pulses the activity LED
 
         Args:
-            speed_hz (`int`): Speed of the LED pulse in Hz
+            speed_hz (int): Speed of the LED pulse in Hz
         """
         self.__pulse_speed_hz = speed_hz
         self.__timer.deinit()
