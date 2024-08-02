@@ -26,8 +26,10 @@ class Weathervane:
     Handles overall functionality of the enviro board
 
     Attributes:
-        rtc (PCF85063A): controller for RTC chip
-        activity_led (ActivityLED): controller for activity LED
+        logger (Logging): Logger for saving log output to file
+        button (Pin): The button on the front of the enviro itself
+        rtc (PCF85063A): Controller for RTC chip
+        activity_led (ActivityLED): Controller for activity LED
     """
 
     def __init__(self):
