@@ -1,10 +1,11 @@
 from machine import Pin
 from time import sleep_ms, ticks_ms, ticks_diff
 from math import pi
+from pimoroni import Analog
 from ucollections import OrderedDict
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
-from utils.constants import WIND_SPEED_PIN, WIND_RADIUS_CM, WIND_FACTOR
+from utils.constants import WIND_DIR_PIN, WIND_SPEED_PIN, WIND_RADIUS_CM, WIND_FACTOR
 
 
 class Sensors:
@@ -19,6 +20,7 @@ class Sensors:
         self.__bme280 = BreakoutBME280(i2c, 0x77)
         self.__ltr559 = BreakoutLTR559(i2c)
         self.__wind_speed_pin = Pin(WIND_SPEED_PIN, Pin.IN, Pin.PULL_UP)
+        self.__wind_dir_pin = Analog(WIND_DIR_PIN)
 
     def __get_wind_speed(self, sample_time_ms=1000):
         """
@@ -70,6 +72,47 @@ class Sensors:
 
         return wind_speed
 
+    def __get_wind_dir(self):
+        """
+        Gets wind direction heading.
+
+        Converts the voltage reading given by the wind direction pin into degrees.
+        Finds the closest value from an array of 45 degree heading increments and returns it
+
+        Note:
+          The wind direction is read using Pimoroni's own Analog class, which does some
+          skullduggery behind the scenes to correct the returned values a bit
+
+        Returns:
+          int: Wind direction heading in degrees
+        """
+        ADC_TO_DEGREES = (0.9, 2.0, 3.0, 2.8, 2.5, 1.5, 0.3, 0.6)
+
+        closest_index = -1
+        last_index = None
+
+        # Make sure there are 2 readings in a row that much as if readings are taken
+        # during transition between two values it can bug out
+        while True:
+            value = self.__wind_dir_pin.read_voltage()
+
+            closest_index = -1
+            closest_value = float("inf")
+
+            for i in range(8):
+                distance = abs(ADC_TO_DEGREES[i] - value)
+                if distance < closest_value:
+                    closest_value = distance
+                    closest_index = i
+
+            # If 2 matching values in a row, exit the loop
+            if last_index == closest_index:
+                break
+
+            last_index = closest_index
+
+        return closest_index * 45
+
     def get_sensor_readings(self):
         """
         Take readings from all sensors and return a dict containing them
@@ -86,10 +129,9 @@ class Sensors:
         self.__bme280.read()
         sleep_ms(100)
         bme280_data = self.__bme280.read()
-
         ltr_data = self.__ltr559.get_reading()
-
         wind_speed = self.__get_wind_speed()
+        wind_direction = self.__get_wind_dir()
 
         readings_data = OrderedDict(
             [
@@ -101,6 +143,7 @@ class Sensors:
                     round(ltr_data[BreakoutLTR559.LUX] if ltr_data else 0, 2),
                 ),
                 ("wind_speed", wind_speed),
+                ("wind_direction", wind_direction),
             ]
         )
 
