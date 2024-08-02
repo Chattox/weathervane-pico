@@ -31,6 +31,7 @@ class Weathervane:
         button (Pin): The button on the front of the enviro itself
         rtc (PCF85063A): Controller for RTC chip
         activity_led (ActivityLED): Controller for activity LED
+        sensors (Sensors): For getting sensor data
     """
 
     def __init__(self):
@@ -64,13 +65,13 @@ class Weathervane:
         """
         self.logger.info("Starting up...")
 
-        reason = self.get_wake_reason()
+        reason = self.__get_wake_reason()
         self.logger.info(" - Wake reason: ", WAKE_REASON_NAMES[reason])
 
         # Pulse activity LED to show board is active
         self.activity_led.pulse()
 
-    def get_wake_reason(self):
+    def __get_wake_reason(self):
         """
         Get reason for waking
 
