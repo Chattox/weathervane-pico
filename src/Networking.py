@@ -1,16 +1,20 @@
-from time import sleep_ms, ticks_ms
+from os import remove
+from time import gmtime, sleep_ms, ticks_ms
 from rp2 import country
 from network import STA_IF, WLAN, hostname
 from math import ceil
 from ubinascii import hexlify
+from ntptime import time
+from machine import RTC
 from utils.constants import (
     CYW43_LINK_DOWN,
     CYW43_LINK_JOIN,
     CYW43_LINK_UP,
     CYW43_STATUS_NAMES,
 )
-from utils.uid import uid
 from utils.config import WIFI_COUNTRY, WIFI_HOSTNAME, WIFI_PASSWORD, WIFI_SSID
+from utils.file_exists import file_exists
+from utils.uid import uid
 
 
 class Networking:
@@ -134,3 +138,48 @@ class Networking:
         except Exception as x:
             raise Exception(f"Failed to disconnect: {x}")
         self.__logger.info("- Successfully disconnected")
+
+    def sync_rtc_from_ntp(self, i2c, rtc):
+        """
+        Connect to wifi and sync RTC chip to time from an NTP server
+
+        Args:
+            i2c (PimoroniI2C): I2C to enable setting RTC chip time
+            rtc (PCF85063A): Controller for RTC chip
+
+        """
+        self.__logger.info("Syncing RTC to NTP server")
+        self.connect()
+
+        # Fetch current timestamp from NTP server and convert to usable tuple
+        timestamp = time()
+        if not timestamp:
+            self.__logger.error("- Failed to fetch time from NTP server")
+            return
+        timestamp = gmtime(timestamp)
+
+        # Set RTC chip to new time
+        i2c.writeto_mem(0x51, 0x00, b"\x10")  # Reset RTC to change time
+        rtc.datetime(timestamp)  # Set time on RTC chip
+        i2c.writeto_mem(0x51, 0x00, b"\x00")  # Ensure RTC chip is running
+        rtc.enable_timer_interrupt(False)
+
+        # Check the new RTC time to make sure it updated successfully
+        dt = rtc.datetime()
+        if dt != timestamp[0:7]:
+            self.__logger.error("- Failed to update RTC")
+            # Remove last_rtc_sync.txt to trigger reattempt next time
+            if file_exists("last_rtc_sync.txt"):
+                remove("last_rtc_sync.txt")
+            return
+
+        # Sync pico RTC too
+        RTC().datetime((dt[0], dt[1], dt[2], dt[6], dt[3], dt[4], dt[5], 0))
+
+        self.__logger.info("- RTC synced successfully")
+
+        # Write latest sync time to file
+        with open("last_rtc_sync.txt", "w") as syncfile:
+            syncfile.write(
+                "{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}Z".format(*timestamp)
+            )

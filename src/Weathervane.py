@@ -11,12 +11,16 @@ from utils.constants import (
     I2C_SCL_PIN,
     RAIN_PIN,
     RTC_ALARM_PIN,
+    RTC_RESYNC_FREQUENCY,
     WAKE_BUTTON_PRESS,
     WAKE_RAIN_TRIGGER,
     WAKE_REASON_NAMES,
     WAKE_RTC_ALARM,
     WAKE_USB_POWERED,
 )
+from utils.datetime_string import datetime_string
+from utils.file_exists import file_exists
+from utils.timestamp import timestamp
 from Logging import Logging
 from ActivityLED import ActivityLED
 from Sensors import Sensors
@@ -52,7 +56,7 @@ class Weathervane:
         RTC().datetime((t[0], t[1], t[2], t[6], t[3], t[4], t[5], 0))
         self.activity_led = ActivityLED()
         self.sensors = Sensors(self.logger, self.__i2c, self.activity_led)
-        self.wifi = Networking(self.logger, self.__vbus_present)
+        self.networking = Networking(self.logger, self.__vbus_present)
 
     def startup(self):
         """
@@ -150,3 +154,39 @@ class Weathervane:
                 break
 
         reset()
+
+    def is_clock_set(self):
+        """
+        Check if RTC chip clock is set correctly, and has been sync within
+        timeframe defined by RTC_RESYNC_FREQUENCY
+
+        Returns:
+            bool: True if set correctly, False if not
+        """
+        # If the year is on or before 2023, it's not set
+        if self.rtc.datetime()[0] <= 2023:
+            return False
+
+        # If last_rtc_sync.txt exists, check if that time is outside of RTC_RESYNC_FREQUENCY
+        if file_exists("last_rtc_sync.txt"):
+            now = timestamp(datetime_string())
+
+            last_sync_time = ""
+            with open("last_rtc_sync.txt", "r") as syncfile:
+                last_sync_time = syncfile.readline()
+
+            sync_time = now
+            if len(last_sync_time) > 0:
+                sync_time = timestamp(last_sync_time)
+
+            seconds_since_sync = now - sync_time
+
+            if seconds_since_sync >= 0:
+                # Check it's not been longer since the specified resync frequency
+                if seconds_since_sync < (RTC_RESYNC_FREQUENCY * 60 * 60):
+                    return True
+                else:
+                    self.logger.warn(
+                        f"- RTC has not been synced for over {RTC_RESYNC_FREQUENCY} hours"
+                    )
+            return False
