@@ -36,6 +36,27 @@ WAKE_REASON_NAMES = {
     WAKE_USB_POWERED: "USB powered",
 }
 
+# Wifi constants
+# Connection statuses
+CYW43_LINK_DOWN = 0
+CYW43_LINK_JOIN = 1
+CYW43_LINK_NOIP = 2
+CYW43_LINK_UP = 3
+CYW43_LINK_FAIL = -1
+CYW43_LINK_NONET = -2
+CYW43_LINK_BADAUTH = -3
+
+# Connection status names
+CYW43_STATUS_NAMES = {
+    CYW43_LINK_DOWN: "Link is down",
+    CYW43_LINK_JOIN: "Connected to wifi",
+    CYW43_LINK_NOIP: "Connected to wifi, but no IP address",
+    CYW43_LINK_UP: "Connected to wifi, with IP address",
+    CYW43_LINK_FAIL: "Connection failed",
+    CYW43_LINK_NONET: "No matching SSID found (could be out of range, or down)",
+    CYW43_LINK_BADAUTH: "Authentication failure",
+}
+
 # Other helpful values
 # Distance from the centre of the anemometer to the
 # centre of one of the cups in cm

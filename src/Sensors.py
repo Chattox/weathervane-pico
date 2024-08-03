@@ -24,7 +24,9 @@ class Sensors:
     Handles the config and reading of the on-board and external sensors
 
     Args:
-      i2c (PimoroniI2C): I2C controller for passing to sensor controllers
+        logger (Logging): Logging controller for logging info to file
+        i2c (PimoroniI2C): I2C controller for passing to sensor controllers,
+        act_led (ActivityLED): Controller for controlling activity LED on enviro board
     """
 
     def __init__(self, logger, i2c, act_led):

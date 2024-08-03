@@ -3,7 +3,7 @@ from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
-from utils.config import reading_frequency
+from utils.config import READING_FREQUENCY
 from utils.constants import (
     BUTTON_PIN,
     HOLD_VSYS_EN_PIN,
@@ -20,6 +20,7 @@ from utils.constants import (
 from Logging import Logging
 from ActivityLED import ActivityLED
 from Sensors import Sensors
+from Networking import Networking
 
 
 class Weathervane:
@@ -51,6 +52,7 @@ class Weathervane:
         RTC().datetime((t[0], t[1], t[2], t[6], t[3], t[4], t[5], 0))
         self.activity_led = ActivityLED()
         self.sensors = Sensors(self.logger, self.__i2c, self.activity_led)
+        self.wifi = Networking(self.logger, self.__vbus_present)
 
     def startup(self):
         """
@@ -115,7 +117,7 @@ class Weathervane:
         hour, minute, second = dt[3:6]
 
         # Figure out what time the next reading should be at
-        minute += reading_frequency - (minute % reading_frequency)
+        minute += READING_FREQUENCY - (minute % READING_FREQUENCY)
         if minute >= 60:
             hour += 1
             minute -= 60
