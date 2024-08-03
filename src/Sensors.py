@@ -222,6 +222,8 @@ class Sensors:
         Returns:
           dict (OrderedDict): sensor readings
         """
+        self.__logger.info("Taking new reading...")
+
         seconds_since_last = 0
 
         now_str = datetime_string()

@@ -3,7 +3,8 @@ from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
-from utils.config import READING_FREQUENCY
+from ujson import dumps
+from utils.config import NICKNAME, READING_FREQUENCY
 from utils.constants import (
     BUTTON_PIN,
     HOLD_VSYS_EN_PIN,
@@ -20,7 +21,9 @@ from utils.constants import (
 )
 from utils.datetime_string import datetime_string
 from utils.file_exists import file_exists
+from utils.makedir import makedir
 from utils.timestamp import timestamp
+from utils.uid import uid
 from Logging import Logging
 from ActivityLED import ActivityLED
 from Sensors import Sensors
@@ -190,3 +193,27 @@ class Weathervane:
                         f"- RTC has not been synced for over {RTC_RESYNC_FREQUENCY} hours"
                     )
             return False
+
+    def cache_reading(self, readings):
+        """
+        Cache reading locally for upload later
+
+        Args:
+            reading (dict): Readings dict to be cached
+        """
+        self.logger.info("Caching reading for upload")
+        with open("log.txt", "r") as logfile:
+            logs = logfile.read()
+            cache_payload = {
+                "nickname": NICKNAME,
+                "timestamp": datetime_string(),
+                "readings": readings,
+                "model": "weather",
+                "uid": uid(),
+                "logs": logs,
+            }
+
+            uploads_filename = f"uploads/{datetime_string(for_filename=True)}"
+            makedir("uploads")
+            with open(uploads_filename, "w") as upload_file:
+                upload_file.write(dumps(cache_payload))

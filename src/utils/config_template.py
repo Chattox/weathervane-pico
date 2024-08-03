@@ -8,3 +8,6 @@ WIFI_SSID = ""
 WIFI_PASSWORD = ""
 WIFI_COUNTRY = ""
 WIFI_HOSTNAME = None
+
+# Name indentifier for this weathervane
+NICKNAME = ""
