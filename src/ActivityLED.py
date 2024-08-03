@@ -34,7 +34,7 @@ class ActivityLED:
         Updates the activity LED brightness based on a sinusoid seeded by the current time
 
         Args:
-            t (obj): The Timer object passed as part of the Timer callback
+            t (Timer): The Timer object passed as part of the Timer callback
         """
         brightness = (
             sin(ticks_ms() * pi * 2 / (1000 / self.__pulse_speed_hz)) * 40

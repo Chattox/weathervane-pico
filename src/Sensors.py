@@ -1,3 +1,4 @@
+from os import remove
 from machine import Pin
 from time import sleep_ms, ticks_ms, ticks_diff
 from math import pi
@@ -6,6 +7,7 @@ from ucollections import OrderedDict
 from breakout_bme280 import BreakoutBME280
 from breakout_ltr559 import BreakoutLTR559
 from utils.constants import (
+    RAIN_MM_PER_TICK,
     RAIN_PIN,
     WIND_DIR_PIN,
     WIND_SPEED_PIN,
@@ -14,6 +16,7 @@ from utils.constants import (
 )
 from utils.datetime_string import datetime_string
 from utils.file_exists import file_exists
+from utils.timestamp import timestamp
 
 
 class Sensors:
@@ -167,13 +170,52 @@ class Sensors:
 
         self.__prev_rain_trigger = True if wakeup else rain_val
 
-    def get_sensor_readings(self):
+    def __get_rainfall(self, seconds_since_last):
+        """
+        Calculate the amount of rainfall since the last time function was called.
+
+        Also calculate the rainfall per second because why not
+
+        Args:
+            seconds_since_last (int): Seconds since the last reading was taken
+
+        Returns:
+            float, float: Amount of rainfall in mm, Rate of rainfall in mm/s
+        """
+        rain_amount = 0
+        per_second = 0
+        cur_timestamp = timestamp(datetime_string())
+
+        if file_exists("rain.txt"):
+            with open("rain.txt", "r") as rainfile:
+                rain_entries = rainfile.read().split("\n")
+
+            # Count how many rain entries there have been since the last reading
+            for entry in rain_entries:
+                if entry:
+                    ts = timestamp()
+                    if cur_timestamp - ts < seconds_since_last:
+                        amount += RAIN_MM_PER_TICK
+
+            # Once done, remove rain.txt to clear old readings
+            remove("rain.txt")
+
+        # If it's rained at all, calculate rain per second
+        if rain_amount > 0 and seconds_since_last > 0:
+            per_second = rain_amount / seconds_since_last
+
+        return rain_amount, per_second
+
+    def get_sensor_readings(self, seconds_since_last=10):  # TODO: remove this default
         """
         Take readings from all sensors and return a dict containing them
 
         Note:
           May eventually want to add temperature compensation for running
           on USB power heating things up
+
+        Args:
+            seconds_since_last (int): Seconds elapsed since last reading was taken
 
         Returns:
           dict (OrderedDict): sensor readings
@@ -186,6 +228,7 @@ class Sensors:
         ltr_data = self.__ltr559.get_reading()
         wind_speed = self.__get_wind_speed()
         wind_direction = self.__get_wind_dir()
+        rain, rain_per_second = self.__get_rainfall(seconds_since_last)
 
         readings_data = OrderedDict(
             [
@@ -197,6 +240,8 @@ class Sensors:
                     round(ltr_data[BreakoutLTR559.LUX] if ltr_data else 0, 2),
                 ),
                 ("wind_speed", wind_speed),
+                ("rain", rain),
+                ("rain_per_second", rain_per_second),
                 ("wind_direction", wind_direction),
             ]
         )
