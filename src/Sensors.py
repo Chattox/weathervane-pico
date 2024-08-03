@@ -208,7 +208,7 @@ class Sensors:
 
         return rain_amount, per_second
 
-    def get_sensor_readings(self, seconds_since_last=10):  # TODO: remove this default
+    def get_sensor_readings(self):
         """
         Take readings from all sensors and return a dict containing them
 
@@ -222,6 +222,19 @@ class Sensors:
         Returns:
           dict (OrderedDict): sensor readings
         """
+        seconds_since_last = 0
+
+        now_str = datetime_string()
+        if file_exists("last_reading_time.txt"):
+            now_ts = timestamp(now_str)
+
+            with open("last_reading_time.txt", "r") as timefile:
+                last_time = timefile.readline()
+                last_ts = timestamp(last_time)
+
+            seconds_since_last = now_ts - last_ts
+            self.__logger.info(f"- Seconds since last reading: {seconds_since_last}")
+
         # The BME280 returns the register contents first and then takes a new reading
         # so run a dummy read first to discard register contents and get current data
         self.__bme280.read()
@@ -248,4 +261,8 @@ class Sensors:
             ]
         )
 
-        print(readings_data)
+        # Log time of reading for next time
+        with open("last_reading_time.txt", "w") as timefile:
+            timefile.write(now_str)
+
+        return readings_data
