@@ -37,6 +37,7 @@ class Weathervane:
     Attributes:
         logger (Logging): Logger for saving log output to file
         button (Pin): The button on the front of the enviro itself
+        i2c (PimoroniI2C): I2C controller for GPIO devices
         rtc (PCF85063A): Controller for RTC chip
         activity_led (ActivityLED): Controller for activity LED
         sensors (Sensors): For getting sensor data
@@ -49,16 +50,16 @@ class Weathervane:
         self.button = Pin(BUTTON_PIN, Pin.IN, Pin.PULL_DOWN)
         # state of vbus to know if woken by USB
         self.__vbus_present = Pin("WL_GPIO2", Pin.IN).value()
-        self.__i2c = PimoroniI2C(I2C_SDA_PIN, I2C_SCL_PIN, 100000)
+        self.i2c = PimoroniI2C(I2C_SDA_PIN, I2C_SCL_PIN, 100000)
         # initialise RTC chip
-        self.rtc = PCF85063A(self.__i2c)
-        self.__i2c.writeto_mem(0x51, 0x00, b"\x00")
+        self.rtc = PCF85063A(self.i2c)
+        self.i2c.writeto_mem(0x51, 0x00, b"\x00")
         self.rtc.enable_timer_interrupt(False)
         t = self.rtc.datetime()
         # sync pico's RTC to chip
         RTC().datetime((t[0], t[1], t[2], t[6], t[3], t[4], t[5], 0))
         self.activity_led = ActivityLED()
-        self.sensors = Sensors(self.logger, self.__i2c, self.activity_led)
+        self.sensors = Sensors(self.logger, self.i2c, self.activity_led)
         self.networking = Networking(self.logger, self.__vbus_present)
 
     def startup(self):
@@ -193,6 +194,13 @@ class Weathervane:
                         f"- RTC has not been synced for over {RTC_RESYNC_FREQUENCY} hours"
                     )
             return False
+
+    def take_reading(self):
+        """
+        Get readings from sensors then cache to file
+        """
+        readings = self.sensors.get_sensor_readings()
+        self.cache_reading(readings)
 
     def cache_reading(self, readings):
         """

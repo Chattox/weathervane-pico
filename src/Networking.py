@@ -1,4 +1,4 @@
-from os import remove
+from os import ilistdir, listdir, remove
 from time import gmtime, sleep_ms, ticks_ms
 from rp2 import country
 from network import STA_IF, WLAN, hostname
@@ -6,13 +6,22 @@ from math import ceil
 from ubinascii import hexlify
 from ntptime import time
 from machine import RTC
+from urequests import post
+from ujson import load
 from utils.constants import (
     CYW43_LINK_DOWN,
     CYW43_LINK_JOIN,
     CYW43_LINK_UP,
     CYW43_STATUS_NAMES,
 )
-from utils.config import WIFI_COUNTRY, WIFI_HOSTNAME, WIFI_PASSWORD, WIFI_SSID
+from utils.config import (
+    UPLOAD_DESTINATION,
+    WIFI_COUNTRY,
+    WIFI_HOSTNAME,
+    WIFI_PASSWORD,
+    WIFI_SSID,
+)
+from utils.cached_reading_count import cached_reading_count
 from utils.file_exists import file_exists
 from utils.uid import uid
 
@@ -157,6 +166,7 @@ class Networking:
             self.__logger.error("- Failed to fetch time from NTP server")
             return
         timestamp = gmtime(timestamp)
+        self.disconnect()
 
         # Set RTC chip to new time
         i2c.writeto_mem(0x51, 0x00, b"\x10")  # Reset RTC to change time
@@ -183,3 +193,44 @@ class Networking:
             syncfile.write(
                 "{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}Z".format(*timestamp)
             )
+
+    def upload_readings(self):
+        """
+        Upload cached readings to http endpoint
+        """
+        self.__logger.info("Preparing to upload readings...")
+        self.connect()
+
+        self.__logger.info(
+            f"Uploading {cached_reading_count()} cached reading(s) to {UPLOAD_DESTINATION}..."
+        )
+
+        # Upload each cached reading in turn
+        for reading_file in ilistdir("uploads"):
+            try:
+                with open(f"uploads/{reading_file[0]}", "r") as upload_file:
+                    try:
+                        res = post(
+                            UPLOAD_DESTINATION, auth=None, json=(load(upload_file))
+                        )
+                        res.close()
+
+                        # If upload successful, delete cached upload
+                        if res.status_code in [200, 201, 202]:
+                            remove(f"uploads/{reading_file[0]}")
+                            self.__logger.info(f"- Uploaded {reading_file[0]}")
+                        else:
+                            self.__logger.error(
+                                f"- Upload of {reading_file[0]} failed. Status: {res.status_code}, Reason: {res.reason}"
+                            )
+
+                    except Exception as x:
+                        self.__logger.exception(
+                            f"- An exception occurred when uploading: {x}"
+                        )
+
+            except OSError:
+                self.__logger.error(f"- Failed to open '{reading_file[0]}'")
+
+        # Finally, disconnect from wifi
+        self.disconnect()

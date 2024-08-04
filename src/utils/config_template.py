@@ -11,3 +11,6 @@ WIFI_HOSTNAME = None
 
 # Name indentifier for this weathervane
 NICKNAME = ""
+
+# Upload destination
+UPLOAD_DESTINATION = ""
