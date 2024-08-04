@@ -18,6 +18,9 @@ from utils.constants import (
     WAKE_REASON_NAMES,
     WAKE_RTC_ALARM,
     WAKE_USB_POWERED,
+    WARN_LED_BLINK,
+    WARN_LED_OFF,
+    WARN_LED_ON,
 )
 from utils.datetime_string import datetime_string
 from utils.file_exists import file_exists
@@ -225,3 +228,17 @@ class Weathervane:
             makedir("uploads")
             with open(uploads_filename, "w") as upload_file:
                 upload_file.write(dumps(cache_payload))
+
+    def set_warn_led(self, state):
+        """
+        Sets the state of the warn LED (off, on, or blinking) which is controlled by the RTC chip
+
+        Args:
+            state (int): State to set the warn LED to defined in utils/constants.py
+        """
+        if state == WARN_LED_OFF:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_OFF)
+        elif state == WARN_LED_ON:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1024HZ)
+        elif state == WARN_LED_BLINK:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1HZ)
