@@ -1,9 +1,11 @@
+from io import StringIO
 from machine import Pin, RTC, idle, reset
 from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
 from ujson import dumps
+from sys import print_exception
 from utils.config import NICKNAME, READING_FREQUENCY
 from utils.constants import (
     BUTTON_PIN,
@@ -254,5 +256,21 @@ class Weathervane:
             message (str): The error message to be logged
         """
         self.logger.error(message)
+        self.set_warn_led(WARN_LED_BLINK)
+        self.sleep()
+
+    def exception(self, exc):
+        """
+        Stop normal operations, log exception and go back to sleep
+
+        For when an exception occurs which means the weathervane cannot continue
+        normal operations
+
+        Args:
+            exc (Exception): The exception to be logged
+        """
+        buf = StringIO()
+        print_exception(exc, buf)
+        self.logger.exception("! - " + buf.getvalue())
         self.set_warn_led(WARN_LED_BLINK)
         self.sleep()

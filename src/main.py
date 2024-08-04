@@ -24,4 +24,4 @@ try:
     station.networking.upload_readings()
 
 except Exception as x:
-    print(x)
+    station.exception(x)
