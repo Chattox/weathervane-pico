@@ -1,9 +1,12 @@
+from os import statvfs
+from io import StringIO
 from machine import Pin, RTC, idle, reset
 from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
 from ujson import dumps
+from sys import print_exception
 from utils.config import NICKNAME, READING_FREQUENCY
 from utils.constants import (
     BUTTON_PIN,
@@ -18,6 +21,9 @@ from utils.constants import (
     WAKE_REASON_NAMES,
     WAKE_RTC_ALARM,
     WAKE_USB_POWERED,
+    WARN_LED_BLINK,
+    WARN_LED_OFF,
+    WARN_LED_ON,
 )
 from utils.datetime_string import datetime_string
 from utils.file_exists import file_exists
@@ -210,6 +216,7 @@ class Weathervane:
             reading (dict): Readings dict to be cached
         """
         self.logger.info("Caching reading for upload")
+        # Add the logfile to cached reading to allow for remote diagnostics
         with open("log.txt", "r") as logfile:
             logs = logfile.read()
             cache_payload = {
@@ -225,3 +232,56 @@ class Weathervane:
             makedir("uploads")
             with open(uploads_filename, "w") as upload_file:
                 upload_file.write(dumps(cache_payload))
+
+    def set_warn_led(self, state):
+        """
+        Sets the state of the warn LED (off, on, or blinking) which is controlled by the RTC chip
+
+        Args:
+            state (int): State to set the warn LED to defined in utils/constants.py
+        """
+        if state == WARN_LED_OFF:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_OFF)
+        elif state == WARN_LED_ON:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1024HZ)
+        elif state == WARN_LED_BLINK:
+            self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1HZ)
+
+    def error(self, message):
+        """
+        Stop normal operations, log error, and go back to sleep.
+
+        For when a non-exception error has occurred that means the weathervane should not
+        continue it's normal operation
+
+        Args:
+            message (str): The error message to be logged
+        """
+        self.logger.error(message)
+        self.set_warn_led(WARN_LED_BLINK)
+        self.sleep()
+
+    def exception(self, exc):
+        """
+        Stop normal operations, log exception and go back to sleep
+
+        For when an exception occurs which means the weathervane cannot continue
+        normal operations
+
+        Args:
+            exc (Exception): The exception to be logged
+        """
+        buf = StringIO()
+        print_exception(exc, buf)
+        self.logger.exception("! - " + buf.getvalue())
+        self.set_warn_led(WARN_LED_BLINK)
+        self.sleep()
+
+    def space_remaining(self):
+        """
+        Logs the amount of space remaining in the pico's storage
+        """
+        filesys_stats = statvfs(".")
+        self.logger.info(
+            f"{filesys_stats[3]} blocks free out of {filesys_stats[2]} total"
+        )
