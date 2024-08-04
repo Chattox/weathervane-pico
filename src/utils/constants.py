@@ -60,6 +60,9 @@ CYW43_STATUS_NAMES = {
 # How often RTC should be resynced in hours
 RTC_RESYNC_FREQUENCY = 168
 
+# How many readings to cache before uploading
+UPLOAD_FREQUENCY = 2
+
 # NTP host URL
 NTP_HOST = "uk.pool.ntp.org"
 
