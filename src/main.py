@@ -15,7 +15,9 @@ try:
 
     if not station.is_clock_set():
         station.logger.info("RTC not set, syncing from NTP server")
-        station.networking.sync_rtc_from_ntp(station.i2c, station.rtc)
+        clock_set = station.networking.sync_rtc_from_ntp(station.i2c, station.rtc)
+        if not clock_set:
+            station.error("- Failed to synchronise RTC")
 
     station.take_reading()
 

@@ -242,3 +242,17 @@ class Weathervane:
             self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1024HZ)
         elif state == WARN_LED_BLINK:
             self.rtc.set_clock_output(PCF85063A.CLOCK_OUT_1HZ)
+
+    def error(self, message):
+        """
+        Stop normal operations, log error, and go back to sleep.
+
+        For when a non-exception error has occurred that means the weathervane should not
+        continue it's normal operation
+
+        Args:
+            message (str): The error message to be logged
+        """
+        self.logger.error(message)
+        self.set_warn_led(WARN_LED_BLINK)
+        self.sleep()

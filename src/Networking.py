@@ -156,6 +156,9 @@ class Networking:
             i2c (PimoroniI2C): I2C to enable setting RTC chip time
             rtc (PCF85063A): Controller for RTC chip
 
+        Returns:
+            bool: True if RTC set correctly, False if not
+
         """
         self.__logger.info("Syncing RTC to NTP server")
         self.connect()
@@ -177,11 +180,10 @@ class Networking:
         # Check the new RTC time to make sure it updated successfully
         dt = rtc.datetime()
         if dt != timestamp[0:7]:
-            self.__logger.error("- Failed to update RTC")
             # Remove last_rtc_sync.txt to trigger reattempt next time
             if file_exists("last_rtc_sync.txt"):
                 remove("last_rtc_sync.txt")
-            return
+            return False
 
         # Sync pico RTC too
         RTC().datetime((dt[0], dt[1], dt[2], dt[6], dt[3], dt[4], dt[5], 0))
@@ -193,6 +195,8 @@ class Networking:
             syncfile.write(
                 "{0:04d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}:{5:02d}Z".format(*timestamp)
             )
+
+        return True
 
     def upload_readings(self):
         """
