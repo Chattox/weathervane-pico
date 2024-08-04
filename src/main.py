@@ -1,6 +1,7 @@
 from time import sleep_ms
 from Weathervane import Weathervane
-from utils.constants import UPLOAD_FREQUENCY, WARN_LED_OFF
+from utils.constants import WARN_LED_OFF
+from utils.config import UPLOAD_FREQUENCY
 from utils.cached_reading_count import cached_reading_count
 
 # Sleep for 0.5 seconds to fix https://github.com/micropython/micropython/issues/9605
