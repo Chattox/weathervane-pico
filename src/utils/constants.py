@@ -57,9 +57,6 @@ CYW43_STATUS_NAMES = {
     CYW43_LINK_BADAUTH: "Authentication failure",
 }
 
-# How often RTC should be resynced in hours
-RTC_RESYNC_FREQUENCY = 168
-
 # NTP host URL
 NTP_HOST = "uk.pool.ntp.org"
 

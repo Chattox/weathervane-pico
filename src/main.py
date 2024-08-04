@@ -1,6 +1,8 @@
 from time import sleep_ms
 from Weathervane import Weathervane
 from utils.constants import WARN_LED_OFF
+from utils.config import UPLOAD_FREQUENCY
+from utils.cached_reading_count import cached_reading_count
 
 # Sleep for 0.5 seconds to fix https://github.com/micropython/micropython/issues/9605
 sleep_ms(500)
@@ -27,7 +29,16 @@ try:
     # Take readings from sensors and cache them
     station.take_reading()
 
-    station.networking.upload_readings()
+    cache_count = cached_reading_count()
+    if cache_count >= UPLOAD_FREQUENCY:
+        station.logger.info(f"{cache_count} cached readings to upload")
+        station.networking.upload_readings()
+    else:
+        station.logger.info(
+            f"Not enough cached readings to upload ({cache_count} readings). Waiting until there are {UPLOAD_FREQUENCY} readings"
+        )
+
+    station.sleep()
 
 except Exception as x:
     station.exception(x)

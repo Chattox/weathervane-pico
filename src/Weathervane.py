@@ -7,7 +7,7 @@ from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
 from ujson import dumps
 from sys import print_exception
-from utils.config import NICKNAME, READING_FREQUENCY
+from utils.config import NICKNAME, READING_FREQUENCY, RTC_RESYNC_FREQUENCY
 from utils.constants import (
     BUTTON_PIN,
     HOLD_VSYS_EN_PIN,
@@ -15,7 +15,6 @@ from utils.constants import (
     I2C_SCL_PIN,
     RAIN_PIN,
     RTC_ALARM_PIN,
-    RTC_RESYNC_FREQUENCY,
     WAKE_BUTTON_PRESS,
     WAKE_RAIN_TRIGGER,
     WAKE_REASON_NAMES,
