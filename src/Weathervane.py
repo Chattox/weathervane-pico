@@ -1,3 +1,4 @@
+from os import statvfs
 from io import StringIO
 from machine import Pin, RTC, idle, reset
 from time import sleep_ms
@@ -215,6 +216,7 @@ class Weathervane:
             reading (dict): Readings dict to be cached
         """
         self.logger.info("Caching reading for upload")
+        # Add the logfile to cached reading to allow for remote diagnostics
         with open("log.txt", "r") as logfile:
             logs = logfile.read()
             cache_payload = {
@@ -274,3 +276,12 @@ class Weathervane:
         self.logger.exception("! - " + buf.getvalue())
         self.set_warn_led(WARN_LED_BLINK)
         self.sleep()
+
+    def space_remaining(self):
+        """
+        Logs the amount of space remaining in the pico's storage
+        """
+        filesys_stats = statvfs(".")
+        self.logger.info(
+            f"{filesys_stats[3]} blocks free out of {filesys_stats[2]} total"
+        )

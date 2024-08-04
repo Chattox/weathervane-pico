@@ -11,14 +11,20 @@ try:
     # Turn off warn LED in case it's currently going
     station.set_warn_led(WARN_LED_OFF)
 
+    # Initial startup process
     station.startup()
 
+    # Make sure RTC chip is set correctly
     if not station.is_clock_set():
         station.logger.info("RTC not set, syncing from NTP server")
         clock_set = station.networking.sync_rtc_from_ntp(station.i2c, station.rtc)
         if not clock_set:
             station.error("- Failed to synchronise RTC")
 
+    # Log space remaining in pico storage
+    station.space_remaining()
+
+    # Take readings from sensors and cache them
     station.take_reading()
 
     station.networking.upload_readings()
