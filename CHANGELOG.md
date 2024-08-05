@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.1](https://github.com/Chattox/weathervane-pico/compare/v0.1.0...v0.1.1) (2024-08-05)
+
+
+### Bug Fixes
+
+* **sensors:** rain data not being calculated and added to readings ([#15](https://github.com/Chattox/weathervane-pico/issues/15)) ([309e965](https://github.com/Chattox/weathervane-pico/commit/309e9652003bb5ea7b2606c5e08efeae465805d5))
+* **utils:** datetime_string returning incorrectly formatted datetime string ([#14](https://github.com/Chattox/weathervane-pico/issues/14)) ([b68a6a1](https://github.com/Chattox/weathervane-pico/commit/b68a6a11c495db5e3fdc34bcf0fe6bcfb7e2b80a))
+* **weathervane:** not saving cached readings as json ([#12](https://github.com/Chattox/weathervane-pico/issues/12)) ([f63b057](https://github.com/Chattox/weathervane-pico/commit/f63b057c9ac9e8da898422ec27c2ce839ae3921a))
+
 ## 0.1.0 (2024-08-04)
 
 
