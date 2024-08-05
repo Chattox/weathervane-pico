@@ -227,7 +227,7 @@ class Weathervane:
                 "logs": logs,
             }
 
-            uploads_filename = f"uploads/{datetime_string(for_filename=True)}"
+            uploads_filename = f"uploads/{datetime_string(for_filename=True)}.json"
             makedir("uploads")
             with open(uploads_filename, "w") as upload_file:
                 upload_file.write(dumps(cache_payload))
