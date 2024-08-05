@@ -197,7 +197,7 @@ class Sensors:
                 if entry:
                     ts = timestamp()
                     if cur_timestamp - ts < seconds_since_last:
-                        amount += RAIN_MM_PER_TICK
+                        rain_amount += RAIN_MM_PER_TICK
 
             # Once done, remove rain.txt to clear old readings
             remove("rain.txt")
