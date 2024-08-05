@@ -14,6 +14,6 @@ def datetime_string(for_filename=False):
     """
     now = RTC().datetime()
     if for_filename:
-        return "{0:04d}-{1:02d}-{2:02d}_{4:02d}-{5:02d}-{6:02d}".format(*now)
+        return "{0:04d}-{1:02d}-{2:02d}T{4:02d}-{5:02d}-{6:02d}Z".format(*now)
     else:
-        return "{0:04d}-{1:02d}-{2:02d} {4:02d}:{5:02d}:{6:02d}".format(*now)
+        return "{0:04d}-{1:02d}-{2:02d}T{4:02d}:{5:02d}:{6:02d}Z".format(*now)
