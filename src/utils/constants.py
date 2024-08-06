@@ -68,3 +68,6 @@ WIND_RADIUS_CM = 7.0
 WIND_FACTOR = 0.0218
 # Amount of rain required for the bucket sensor to tip in mm
 RAIN_MM_PER_TICK = 0.2794
+
+# Conversion for voltage reading
+ADC_VOLT_CONVERSION = 3.3 / 65535
