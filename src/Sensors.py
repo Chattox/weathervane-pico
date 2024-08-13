@@ -195,7 +195,7 @@ class Sensors:
             # Count how many rain entries there have been since the last reading
             for entry in rain_entries:
                 if entry:
-                    ts = timestamp()
+                    ts = timestamp(entry)
                     if cur_timestamp - ts < seconds_since_last:
                         rain_amount += RAIN_MM_PER_TICK
 
@@ -235,7 +235,8 @@ class Sensors:
                 last_ts = timestamp(last_time)
 
             seconds_since_last = now_ts - last_ts
-            self.__logger.info(f"- Seconds since last reading: {seconds_since_last}")
+            self.__logger.info(
+                f"- Seconds since last reading: {seconds_since_last}")
 
         # The BME280 returns the register contents first and then takes a new reading
         # so run a dummy read first to discard register contents and get current data
