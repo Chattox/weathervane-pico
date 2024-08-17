@@ -224,7 +224,7 @@ class Weathervane:
         # Add the logfile to cached reading to allow for remote diagnostics
         with open("log.txt", "r") as logfile:
             logs = logfile.read()
-            voltage = self.test_get_voltage()
+            voltage = self.get_voltage()
             cache_payload = {
                 "nickname": NICKNAME,
                 "timestamp": datetime_string(),
@@ -294,29 +294,19 @@ class Weathervane:
         )
 
     def get_voltage(self):
-        def get_pad(gpio):
-            return mem32[0x4001C000 | (4 + (4 * gpio))]
+        """
+        Gets the current voltage of the battery power source.
 
-        def set_pad(gpio, val):
-            mem32[0x4001C000 | (4 + (4 * gpio))] = val
+        In order to do this on the pico, the wifi has to be disabled temporarily
+        as the wifi and voltage reading capabilities share the same pin
 
-        def read_vsys_voltage():
-            adc_vsys = ADC(3)
-            return (adc_vsys.read_u16() * ADC_VOLT_CONVERSION) * 3.0
+        Note:
+            If the board is on USB power, it will always return ~5ish
 
-        old_pad = get_pad(29)
-        sample_count = 10
-        battery_voltage = 0
-        for i in range(0, sample_count):
-            battery_voltage += read_vsys_voltage()
-
-        battery_voltage /= sample_count
-        battery_voltage = round(battery_voltage, 3)
-        set_pad(29, old_pad)
-        return battery_voltage
-
-    def test_get_voltage(self):
-        conversion_factor = 3 * 3.3 / 65535
+        Returns:
+            float: voltage level of battery power source
+        """
+        conversion_factor = 3 * ADC_VOLT_CONVERSION
         try:
             if self.networking.__wlan is not None:
                 self.networking.__wlan.active(False)
