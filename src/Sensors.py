@@ -195,7 +195,7 @@ class Sensors:
             # Count how many rain entries there have been since the last reading
             for entry in rain_entries:
                 if entry:
-                    ts = timestamp()
+                    ts = timestamp(entry)
                     if cur_timestamp - ts < seconds_since_last:
                         rain_amount += RAIN_MM_PER_TICK
 
