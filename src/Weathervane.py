@@ -1,14 +1,19 @@
 from os import statvfs
 from io import StringIO
-from machine import Pin, RTC, idle, reset
+from machine import ADC, Pin, RTC, idle, reset, mem32
 from time import sleep_ms
 from pimoroni_i2c import PimoroniI2C
 from pcf85063a import PCF85063A
 from wakeup import get_gpio_state
 from ujson import dumps
 from sys import print_exception
-from utils.config import NICKNAME, READING_FREQUENCY, RTC_RESYNC_FREQUENCY
+from utils.config import (
+    NICKNAME,
+    READING_FREQUENCY,
+    RTC_RESYNC_FREQUENCY,
+)
 from utils.constants import (
+    ADC_VOLT_CONVERSION,
     BUTTON_PIN,
     HOLD_VSYS_EN_PIN,
     I2C_SDA_PIN,
@@ -23,6 +28,7 @@ from utils.constants import (
     WARN_LED_BLINK,
     WARN_LED_OFF,
     WARN_LED_ON,
+    WIFI_CS_PIN,
 )
 from utils.datetime_string import datetime_string
 from utils.file_exists import file_exists
@@ -218,6 +224,7 @@ class Weathervane:
         # Add the logfile to cached reading to allow for remote diagnostics
         with open("log.txt", "r") as logfile:
             logs = logfile.read()
+            voltage = self.get_voltage()
             cache_payload = {
                 "nickname": NICKNAME,
                 "timestamp": datetime_string(),
@@ -225,6 +232,7 @@ class Weathervane:
                 "model": "weather",
                 "uid": uid(),
                 "logs": logs,
+                "voltage": voltage,
             }
 
             uploads_filename = f"uploads/{datetime_string(for_filename=True)}.json"
@@ -284,3 +292,35 @@ class Weathervane:
         self.logger.info(
             f"{filesys_stats[3]} blocks free out of {filesys_stats[2]} total"
         )
+
+    def get_voltage(self):
+        """
+        Gets the current voltage of the battery power source.
+
+        In order to do this on the pico, the wifi has to be disabled temporarily
+        as the wifi and voltage reading capabilities share the same pin
+
+        Note:
+            If the board is on USB power, it will always return ~5ish
+
+        Returns:
+            float: voltage level of battery power source
+        """
+        conversion_factor = 3 * ADC_VOLT_CONVERSION
+        try:
+            if self.networking.__wlan is not None:
+                self.networking.__wlan.active(False)
+                self.networking.__wlan.deinit()
+
+            Pin(25, mode=Pin.OUT, pull=Pin.PULL_DOWN).high()
+
+            Pin(29, Pin.IN)
+
+            vsys = ADC(29)
+            voltage = vsys.read_u16() * conversion_factor
+            self.logger.debug(f"Voltage: {voltage}")
+            return voltage
+        finally:
+            Pin(29, Pin.ALT, pull=Pin.PULL_DOWN, alt=7)
+            if self.networking.__wlan is not None:
+                self.networking.__wlan.active(True)
