@@ -135,6 +135,12 @@ class Weathervane:
         dt = self.rtc.datetime()
         hour, minute, second = dt[3:6]
 
+        # If the time is very close to the end of the minute (seems to be from
+        # the RTC chip drifting a little) advance to the next minute to avoid
+        # erroneous extra/missed readings
+        if second > 50:
+            minute += 1
+
         # Figure out what time the next reading should be at
         minute += READING_FREQUENCY - (minute % READING_FREQUENCY)
         if minute >= 60:
