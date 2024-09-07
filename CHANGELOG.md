@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Chattox/weathervane-pico/compare/v0.1.1...v0.1.2) (2024-09-07)
+
+
+### Features
+
+* **weathervane:** read battery voltage ([#16](https://github.com/Chattox/weathervane-pico/issues/16)) ([083f18c](https://github.com/Chattox/weathervane-pico/commit/083f18c0a538dd5f4f49551d6811b5b47979d661))
+
 ## [0.1.1](https://github.com/Chattox/weathervane-pico/compare/v0.1.0...v0.1.1) (2024-08-05)
 
 
